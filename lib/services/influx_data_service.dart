@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:influxdb_client/api.dart';
 
-void main() async {
+Future<Map<String, dynamic>> fetchDataFromDatabase() async {
   // Crear InfluxDBClient
   var client = InfluxDBClient(
     url: 'http://localhost:8086',
-    token: 'B6FuBSJ2PHbKlt_NUcpG3ocWgnVt7-VNR9tMjMaW_jsZwkuxW4azGATxSIpjMZMXkk7igjP6XgW06KP2ZViTcg==',
+    token: 'ymHvcMekmKA9-vJRSbwT4gSGDwAijui2twmdO_CPImyO7TZUFJac3wG-019JXO5Edh0Objbb95S840j-2mbOxw==',
     org: 'titulacion',
     bucket: 'titulacion',
     debug: true,
@@ -14,22 +14,29 @@ void main() async {
   // Crear servicio de consulta y consultar datos
   var queryService = client.getQueryService();
   var fluxQuery = '''
-    from(bucket: "mi-bucket")
+    from(bucket: "titulacion")
       |> range(start: -20d)
-      |> filter(fn: (r) => r["_measurement"] == "GLP_measurement")
+      |> filter(fn: (r) => r["_measurement"] == "lecturas")
+      |> last()
   ''';
 
   // Consultar datos
-  print('\n\n----------------------- Consulta de datos -----------------------\n');
   var recordStream = await queryService.query(fluxQuery);
 
-  // Imprimir resultados de la consulta
-  print('\n\n--------------------- Resultados de la consulta ---------------------\n');
-  await recordStream.forEach((record) {
-    print('Valor de GLP en ${record['_time']} es ${record['_value']}');
-  });
+  // Obtener el primer registro
+  var record = await recordStream.first;
 
-  // Cerrar cliente después de la consulta
-  await Future.delayed(Duration(seconds: 5));
-  client.close();
+  // Retornar los datos
+  return {
+    'peso': record['peso'],
+    'temperatura': record['temperatura'],
+  };
+}
+
+void main() async {
+  // Obtener los datos de la base de datos
+  var data = await fetchDataFromDatabase();
+
+  // Imprimir los datos
+  print('Peso: ${data['peso']}, Temperatura: ${data['temperatura']}');
 }
