@@ -1,42 +1,59 @@
 import 'dart:async';
 import 'package:influxdb_client/api.dart';
 
-Future<Map<String, dynamic>> fetchDataFromDatabase() async {
-  // Crear InfluxDBClient
-  var client = InfluxDBClient(
-    url: 'http://localhost:8086',
-    token: 'ymHvcMekmKA9-vJRSbwT4gSGDwAijui2twmdO_CPImyO7TZUFJac3wG-019JXO5Edh0Objbb95S840j-2mbOxw==',
-    org: 'titulacion',
-    bucket: 'titulacion',
-    debug: true,
-  );
+class InfluxDBService {
+  final InfluxDBClient _client;
 
-  // Crear servicio de consulta y consultar datos
-  var queryService = client.getQueryService();
-  var fluxQuery = '''
-    from(bucket: "titulacion")
-      |> range(start: -20d)
-      |> filter(fn: (r) => r["_measurement"] == "lecturas")
-      |> last()
-  ''';
+  InfluxDBService()
+      : _client = InfluxDBClient(
+          url: 'http://172.16.132.53:8086',  // Cambia esto según tu configuración
+          token: 'ymHvcMekmKA9-vJRSbwT4gSGDwAijui2twmdO_CPImyO7TZUFJac3wG-019JXO5Edh0Objbb95S840j-2mbOxw==',
+          org: 'titulacion',
+          bucket: 'titulacion',
+          debug: true,
+        );
 
-  // Consultar datos
-  var recordStream = await queryService.query(fluxQuery);
+  Stream<Map<String, dynamic>> getDataStream() async* {
+    var queryService = _client.getQueryService();
+    var fluxQuery = '''
+      from(bucket: "titulacion")
+        |> range(start: -20d)
+        |> filter(fn: (r) => r["_measurement"] == "lecturas")
+        |> filter(fn: (r) => r["_field"] == "peso" or r["_field"] == "temperatura")
+        |> last()
+    ''';
 
-  // Obtener el primer registro
-  var record = await recordStream.first;
+    while (true) {
+      try {
+        var recordStream = await queryService.query(fluxQuery);
+        var records = await recordStream.toList();
 
-  // Retornar los datos
-  return {
-    'peso': record['peso'],
-    'temperatura': record['temperatura'],
-  };
-}
+        if (records.isNotEmpty) {
+          var pesoRecord = records.firstWhere((r) => r['_field'] == 'peso');
+          var temperaturaRecord = records.firstWhere((r) => r['_field'] == 'temperatura');
 
-void main() async {
-  // Obtener los datos de la base de datos
-  var data = await fetchDataFromDatabase();
+          var peso = pesoRecord['_value'] ?? 0;
+          var temperatura = temperaturaRecord['_value'] ?? 0;
 
-  // Imprimir los datos
-  print('Peso: ${data['peso']}, Temperatura: ${data['temperatura']}');
+          yield {
+            'peso': peso,
+            'temperatura': temperatura,
+          };
+        } else {
+          yield {
+            'peso': 0,
+            'temperatura': 0,
+          };
+        }
+      } catch (e) {
+
+        yield {
+          'peso': 0,
+          'temperatura': 0,
+        };
+      }
+
+      await Future.delayed(const Duration(seconds: 5)); // Ajusta el intervalo según tus necesidades
+    }
+  }
 }

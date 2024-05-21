@@ -18,7 +18,7 @@ class GaugeTemperature extends StatelessWidget {
         value: value,
         axis: const GaugeAxis(
           min: 0,
-          max: 100,
+          max: 55,
           degrees: 180,
           style: GaugeAxisStyle(
             thickness: 20,
@@ -51,7 +51,7 @@ class GaugeTemperature extends StatelessWidget {
         value: value,
         axis: const GaugeAxis(
           min: 0,
-          max: 100,
+          max: 55,
           degrees: 180,
           style: GaugeAxisStyle(
             thickness: 20,
@@ -84,7 +84,7 @@ class GaugeTemperature extends StatelessWidget {
         value: value, // Ajusta el valor para el tercer segmento
         axis: const GaugeAxis(
           min: 0,
-          max: 100, // Ajusta el máximo para el tercer segmento
+          max: 55, // Ajusta el máximo para el tercer segmento
           degrees: 180,
           style: GaugeAxisStyle(
             thickness: 20,
