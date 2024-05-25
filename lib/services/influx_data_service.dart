@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'package:influxdb_client/api.dart';
+import 'package:frontend_tesis_monitoreo/services/notification_service.dart';
 
 class InfluxDBService {
   final InfluxDBClient _client;
+  bool _notificationSent = false;
 
   InfluxDBService()
       : _client = InfluxDBClient(
-          url: 'http://172.16.132.53:8086',  // Cambia esto según tu configuración
-          token: 'ymHvcMekmKA9-vJRSbwT4gSGDwAijui2twmdO_CPImyO7TZUFJac3wG-019JXO5Edh0Objbb95S840j-2mbOxw==',
+          url: 'http://192.168.1.10:8086',
+          token:
+              'ymHvcMekmKA9-vJRSbwT4gSGDwAijui2twmdO_CPImyO7TZUFJac3wG-019JXO5Edh0Objbb95S840j-2mbOxw==',
           org: 'titulacion',
           bucket: 'titulacion',
           debug: true,
@@ -30,10 +33,34 @@ class InfluxDBService {
 
         if (records.isNotEmpty) {
           var pesoRecord = records.firstWhere((r) => r['_field'] == 'peso');
-          var temperaturaRecord = records.firstWhere((r) => r['_field'] == 'temperatura');
+          var temperaturaRecord =
+              records.firstWhere((r) => r['_field'] == 'temperatura');
 
           var peso = pesoRecord['_value'] ?? 0;
           var temperatura = temperaturaRecord['_value'] ?? 0;
+
+          // Lógica de notificación
+          if (peso <= 5 && !_notificationSent) {
+            LocalNotifications.showNotification(
+              title: "Advetrtencia",
+              body: "Los niveles de GLP son bajos",
+              payload: "Advertencia",
+            );
+            _notificationSent = true;
+            // Programar la notificación de recordatorio después de un tiempo
+            Future.delayed(const Duration(minutes: 30), () {
+              if (peso <= 5 && _notificationSent) {
+                LocalNotifications.showNotification(
+                  title: "Recordatorio",
+                  body: "El peso sigue siendo <= 5",
+                  payload: "Recordatorio",
+                );
+              }
+            });
+          } else if (peso > 5) {
+            // Reiniciar la bandera si el peso vuelve a ser > 5
+            _notificationSent = false;
+          }
 
           yield {
             'peso': peso,
@@ -46,14 +73,13 @@ class InfluxDBService {
           };
         }
       } catch (e) {
-
         yield {
           'peso': 0,
           'temperatura': 0,
         };
       }
 
-      await Future.delayed(const Duration(seconds: 5)); // Ajusta el intervalo según tus necesidades
+      await Future.delayed(const Duration(seconds: 5));
     }
   }
 }

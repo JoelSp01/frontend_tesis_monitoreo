@@ -20,6 +20,8 @@ dependencies:
   cupertino_icons: ^1.0.6
   gauge_indicator: ^0.4.3
   influxdb_client: ^2.9.0
+  flutter_local_notifications: ^17.1.2
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
