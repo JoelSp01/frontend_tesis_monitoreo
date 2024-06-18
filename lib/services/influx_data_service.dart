@@ -40,7 +40,7 @@ class InfluxDBService {
           var temperatura = temperaturaRecord['_value'] ?? 0;
 
           // Lógica de notificación
-          if (peso <= 5 && !_notificationSent) {
+          if (peso <= 20 && !_notificationSent) {
             LocalNotifications.showNotification(
               title: "Advetrtencia",
               body: "Los niveles de GLP son bajos",
@@ -57,7 +57,7 @@ class InfluxDBService {
                 );
               }
             });
-          } else if (peso > 5) {
+          } else if (peso > 20) {
             // Reiniciar la bandera si el peso vuelve a ser > 5
             _notificationSent = false;
           }

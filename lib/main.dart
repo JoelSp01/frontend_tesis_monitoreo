@@ -1,13 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:frontend_tesis_monitoreo/services/notification_service.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'screens/connection_screen.dart'; // Importa tu pantalla de conexión aquí
+import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/connection_screen.dart';
+import 'screens/home_screen.dart'; // Asegúrate de importar tu HomeScreen aquí
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await LocalNotifications.init();
   await _requestPermissions();
-  runApp(const MyApp());
+
+  // Verifica si es la primera vez que se abre la app
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  bool isFirstTime = prefs.getBool('isFirstTime') ?? true;
+
+  if (isFirstTime) {
+    // Marca que la app ya fue abierta por primera vez
+    await prefs.setBool('isFirstTime', false);
+  }
+
+  runApp(MyApp(isFirstTime: isFirstTime));
 }
 
 Future<void> _requestPermissions() async {
@@ -17,14 +29,16 @@ Future<void> _requestPermissions() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isFirstTime;
+
+  const MyApp({Key? key, required this.isFirstTime}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Material App',
-      home: ConnectionScreen(), // Aquí estableces ConnectionScreen como la pantalla de inicio
+      home: isFirstTime ? const ConnectionScreen() : const HomeScreen(), // Establece la pantalla inicial según el estado
     );
   }
 }
