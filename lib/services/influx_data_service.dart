@@ -8,9 +8,9 @@ class InfluxDBService {
 
   InfluxDBService()
       : _client = InfluxDBClient(
-          url: 'http://192.168.1.10:8086',
+          url: 'http://www.pucei.edu.ec:8086',
           token:
-              'ymHvcMekmKA9-vJRSbwT4gSGDwAijui2twmdO_CPImyO7TZUFJac3wG-019JXO5Edh0Objbb95S840j-2mbOxw==',
+              'JuKSh-3m_z_-k4R3U4x6Jp9Ee3Omb0k8Dg0kw1t2rsJOmmbOqmG1IpV2UASuV6vbDQ8-qKj-Vf5xiu-MxeLSGg==',
           org: 'titulacion',
           bucket: 'titulacion',
           debug: true,
